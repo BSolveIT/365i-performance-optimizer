@@ -1,0 +1,118 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: 365i Performance Optimizer 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/365i-performance-optimizer\n"
+"POT-Creation-Date: 2025-12-17 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Domain: 365i-performance-optimizer\n"
+"X-Generator: Codex CLI\n"
+
+#: includes/class-i365-po-settings.php:28
+msgid "Performance Optimizer"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:74
+msgid "Enable speculative loading"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:80
+msgid "Eagerness"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:94
+msgid "Eager (default)"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:95
+msgid "Moderate"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:96
+msgid "Conservative"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:108
+msgid "Preconnect & Preload"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:115
+msgid "Enable preconnect & preload"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:119
+msgid "Preconnect hosts (one per line or comma separated)"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:125
+msgid "Stylesheet preload URL"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:131
+msgid "Font preload URL"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:137
+msgid "Hero image preload URL"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:142
+msgid "Front page only"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:149
+msgid "Delivery Cleanup"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:155
+msgid "Remove emoji scripts/styles"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:159
+msgid "Disable embeds script on front end"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:163
+msgid "Disable XML-RPC"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:167
+msgid "Remove REST API link tag (front end)"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:171
+msgid "Remove oEmbed discovery links (front end)"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:178
+msgid "Script Loading"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:185
+msgid "Defer eligible scripts on the front end"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:189
+msgid "Excluded handles (one per line or comma separated)"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:197
+msgid "Images"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:203
+msgid "Set fetchpriority=high when loading is not defined"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:207
+msgid "Disable lazy-loading for homepage images"
+msgstr ""
+
+#: includes/class-i365-po-settings.php:217
+msgid "Save performance settings"
+msgstr ""
