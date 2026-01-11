@@ -2,8 +2,8 @@
 /**
  * Plugin Name: 365i Performance Optimizer
  * Plugin URI: https://www.365i.co.uk/plugins/365i-performance-optimizer
- * Description: Elementor-safe performance tweaks for WordPress 6.9: speculation rules, preconnect/preload, defer scripts, emoji cleanup, and smarter images.
- * Version: 1.1.0
+ * Description: Comprehensive performance optimization for WordPress: speculation rules, script deferral/delay, local fonts, database cleanup, WooCommerce optimization, and more. Elementor-safe with per-page overrides.
+ * Version: 2.0.0
  * Author: Mark McNeece (365i)
  * Author URI: https://www.365i.co.uk/author/mark-mcneece/
  * License: GPL-2.0-or-later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'I365_PO_VERSION', '1.1.0' );
+define( 'I365_PO_VERSION', '2.0.0' );
 define( 'I365_PO_PLUGIN_FILE', __FILE__ );
 define( 'I365_PO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'I365_PO_OPTION_KEY', 'i365_po_settings' );

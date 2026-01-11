@@ -563,3 +563,454 @@
 }
 
 .i365-po-wrap label { margin-bottom: 0; }
+
+/* ==========================================================================
+   Utilities Card
+   ========================================================================== */
+
+.i365-po-card--utilities {
+	--card-accent: #6366f1;
+	grid-column: 1 / -1;
+}
+
+.i365-po-card--utilities::before {
+	background: linear-gradient(90deg, #6366f1, #8b5cf6);
+}
+
+/* Subsections within Utilities */
+.i365-po-subsection {
+	padding: 20px;
+	border-top: 1px solid var(--i365-border);
+}
+
+.i365-po-subsection:first-of-type {
+	border-top: none;
+}
+
+.i365-po-subsection h3 {
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--i365-text-primary);
+	margin: 0 0 6px;
+}
+
+.i365-po-subsection > .description {
+	font-size: 0.8125rem;
+	color: var(--i365-text-secondary);
+	margin: 0 0 16px;
+}
+
+/* Empty state */
+.i365-po-empty {
+	font-size: 0.8125rem;
+	color: var(--i365-text-muted);
+	font-style: italic;
+	padding: 12px;
+	background: var(--i365-bg-input);
+	border-radius: var(--i365-radius-sm);
+	text-align: center;
+}
+
+/* ==========================================================================
+   Profiles Grid
+   ========================================================================== */
+
+.i365-po-profiles-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.i365-po-profile-card {
+	background: var(--i365-bg-input);
+	border: 1px solid var(--i365-border);
+	border-radius: var(--i365-radius-md);
+	padding: 14px;
+	transition: all var(--i365-transition);
+}
+
+.i365-po-profile-card:hover {
+	border-color: var(--i365-border-focus);
+	box-shadow: var(--i365-shadow-sm);
+}
+
+.i365-po-profile-card.is-builtin {
+	border-left: 3px solid #6366f1;
+}
+
+.i365-po-profile-card h4 {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--i365-text-primary);
+	margin: 0 0 4px;
+}
+
+.i365-po-profile-card p {
+	font-size: 0.75rem;
+	color: var(--i365-text-secondary);
+	margin: 0 0 12px;
+	line-height: 1.4;
+}
+
+.i365-po-profile-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.i365-po-profile-actions .button {
+	font-size: 0.75rem !important;
+	padding: 5px 10px !important;
+}
+
+/* Save Profile Form */
+.i365-po-save-profile {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	padding-top: 16px;
+	border-top: 1px dashed var(--i365-border);
+}
+
+.i365-po-save-profile input[type="text"] {
+	flex: 1;
+	min-width: 150px;
+	font-size: 0.8125rem;
+	padding: 8px 12px;
+	background: white;
+	border: 1px solid var(--i365-border);
+	border-radius: var(--i365-radius-sm);
+}
+
+.i365-po-save-profile input[type="text"]:focus {
+	outline: none;
+	border-color: #6366f1;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.i365-po-save-profile .button {
+	white-space: nowrap;
+}
+
+/* ==========================================================================
+   Backups List
+   ========================================================================== */
+
+.i365-po-backups-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.i365-po-backup-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 14px;
+	background: var(--i365-bg-input);
+	border: 1px solid var(--i365-border);
+	border-radius: var(--i365-radius-sm);
+	margin-bottom: 8px;
+	transition: all var(--i365-transition);
+}
+
+.i365-po-backup-item:hover {
+	border-color: var(--i365-border-focus);
+}
+
+.i365-po-backup-item:last-child {
+	margin-bottom: 0;
+}
+
+.i365-po-backup-date {
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: var(--i365-text-primary);
+}
+
+.i365-po-backup-meta {
+	font-size: 0.75rem;
+	color: var(--i365-text-muted);
+	flex: 1;
+}
+
+.i365-po-backup-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.i365-po-backup-actions .button {
+	font-size: 0.75rem !important;
+	padding: 4px 10px !important;
+}
+
+/* ==========================================================================
+   Import/Export
+   ========================================================================== */
+
+.i365-po-import-export {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+}
+
+.i365-po-import {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.i365-po-import-filename {
+	font-size: 0.75rem;
+	color: var(--i365-text-secondary);
+	font-style: italic;
+}
+
+/* Delete button style */
+.button-link-delete {
+	color: var(--i365-error) !important;
+	border-color: transparent !important;
+	background: transparent !important;
+}
+
+.button-link-delete:hover {
+	color: #b91c1c !important;
+	background: #fef2f2 !important;
+}
+
+/* ==========================================================================
+   Responsive adjustments for Utilities
+   ========================================================================== */
+
+@media (max-width: 600px) {
+	.i365-po-profiles-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.i365-po-save-profile {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.i365-po-save-profile input[type="text"] {
+		width: 100%;
+	}
+
+	.i365-po-backup-item {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.i365-po-backup-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	.i365-po-import-export {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.i365-po-import-export .button {
+		width: 100%;
+		justify-content: center;
+	}
+}
+
+/* ==========================================================================
+   Database Cleanup
+   ========================================================================== */
+
+.i365-po-db-actions {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.i365-po-db-stats-container {
+	min-height: 100px;
+}
+
+.i365-po-db-placeholder {
+	font-size: 0.8125rem;
+	color: var(--i365-text-muted);
+	font-style: italic;
+	padding: 24px;
+	background: var(--i365-bg-input);
+	border-radius: var(--i365-radius-sm);
+	text-align: center;
+	border: 1px dashed var(--i365-border);
+}
+
+.i365-po-db-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 10px;
+}
+
+.i365-po-db-stat {
+	background: var(--i365-bg-input);
+	border: 1px solid var(--i365-border);
+	border-radius: var(--i365-radius-sm);
+	padding: 12px 14px;
+	transition: all var(--i365-transition);
+}
+
+.i365-po-db-stat:hover {
+	border-color: var(--i365-border-focus);
+}
+
+.i365-po-db-stat.has-items {
+	border-left: 3px solid #f59e0b;
+}
+
+.i365-po-db-stat.empty {
+	opacity: 0.6;
+}
+
+.i365-po-db-stat__label {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	cursor: pointer;
+}
+
+.i365-po-db-stat__label input[type="checkbox"] {
+	margin: 0;
+}
+
+.i365-po-db-stat__label input[type="checkbox"]:disabled {
+	cursor: not-allowed;
+}
+
+.i365-po-db-stat__name {
+	flex: 1;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: var(--i365-text-primary);
+}
+
+.i365-po-db-stat.empty .i365-po-db-stat__name {
+	color: var(--i365-text-muted);
+}
+
+.i365-po-db-stat__count {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: #f59e0b;
+	min-width: 50px;
+	text-align: right;
+}
+
+.i365-po-db-stat.empty .i365-po-db-stat__count {
+	color: var(--i365-text-muted);
+}
+
+.i365-po-db-stat__desc {
+	width: 100%;
+	font-size: 0.6875rem;
+	color: var(--i365-text-muted);
+	padding-left: 24px;
+	margin-top: -4px;
+}
+
+@media (max-width: 600px) {
+	.i365-po-db-actions {
+		flex-direction: column;
+	}
+
+	.i365-po-db-actions .button {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.i365-po-db-stats {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* ==========================================================================
+   Local Fonts
+   ========================================================================== */
+
+.i365-po-fonts-status {
+	padding: 16px;
+	background: var(--i365-bg-input);
+	border: 1px solid var(--i365-border);
+	border-radius: var(--i365-radius-sm);
+	margin-bottom: 16px;
+}
+
+.i365-po-fonts-info p {
+	margin: 0 0 6px;
+	font-size: 0.8125rem;
+	color: var(--i365-text-primary);
+}
+
+.i365-po-fonts-info p:last-child {
+	margin-bottom: 0;
+}
+
+.i365-po-fonts-info strong {
+	color: var(--i365-text-secondary);
+	font-weight: 500;
+}
+
+.i365-po-fonts-empty {
+	font-size: 0.8125rem;
+	color: var(--i365-text-muted);
+	font-style: italic;
+	margin: 0;
+}
+
+.i365-po-fonts-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.i365-po-field--inline {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.i365-po-field--inline span {
+	flex-shrink: 0;
+}
+
+.i365-po-field--inline input {
+	flex: 1;
+	min-width: 250px;
+}
+
+.i365-po-fonts-buttons {
+	display: flex;
+	gap: 10px;
+}
+
+@media (max-width: 600px) {
+	.i365-po-fonts-buttons {
+		flex-direction: column;
+	}
+
+	.i365-po-fonts-buttons .button {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.i365-po-field--inline {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.i365-po-field--inline input {
+		min-width: auto;
+		width: 100%;
+	}
+}

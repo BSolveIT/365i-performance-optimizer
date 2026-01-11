@@ -1,0 +1,167 @@
+/**
+ * Dashboard Widget Styles
+ *
+ * @package WP_Performance_Optimizer
+ */
+
+.i365-po-widget {
+	padding: 0;
+}
+
+/* Summary Section */
+.i365-po-widget__summary {
+	padding: 15px 0;
+	border-bottom: 1px solid #e0e0e0;
+	margin-bottom: 15px;
+}
+
+.i365-po-widget__count {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 10px;
+}
+
+.i365-po-widget__active {
+	font-size: 32px;
+	font-weight: 600;
+	color: #2271b1;
+	line-height: 1;
+}
+
+.i365-po-widget__separator {
+	font-size: 24px;
+	color: #999;
+}
+
+.i365-po-widget__total {
+	font-size: 24px;
+	color: #666;
+}
+
+.i365-po-widget__label {
+	width: 100%;
+	font-size: 13px;
+	color: #666;
+	margin-top: 4px;
+}
+
+/* Progress Bar */
+.i365-po-widget__progress {
+	height: 8px;
+	background: #e0e0e0;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.i365-po-widget__progress-bar {
+	height: 100%;
+	background: linear-gradient(90deg, #2271b1 0%, #135e96 100%);
+	border-radius: 4px;
+	transition: width 0.3s ease;
+}
+
+/* Features List */
+.i365-po-widget__features h4 {
+	font-size: 13px;
+	font-weight: 600;
+	color: #1d2327;
+	margin: 0 0 10px 0;
+	padding: 0;
+}
+
+.i365-po-widget__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.i365-po-widget__list li {
+	display: flex;
+	align-items: center;
+	padding: 6px 0;
+	font-size: 13px;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.i365-po-widget__list li:last-child {
+	border-bottom: none;
+}
+
+.i365-po-widget__icon {
+	width: 18px;
+	height: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	font-size: 11px;
+	font-weight: bold;
+	margin-right: 8px;
+	flex-shrink: 0;
+}
+
+.i365-po-widget__list li.is-enabled .i365-po-widget__icon {
+	background: #00a32a;
+	color: #fff;
+}
+
+.i365-po-widget__list li.is-disabled .i365-po-widget__icon {
+	background: #ddd;
+	color: #666;
+}
+
+.i365-po-widget__name {
+	flex: 1;
+	color: #1d2327;
+}
+
+.i365-po-widget__list li.is-disabled .i365-po-widget__name {
+	color: #999;
+}
+
+.i365-po-widget__detail {
+	font-size: 11px;
+	color: #666;
+	background: #f0f0f0;
+	padding: 2px 6px;
+	border-radius: 3px;
+	margin-left: 8px;
+}
+
+/* Footer */
+.i365-po-widget__footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-top: 15px;
+	border-top: 1px solid #e0e0e0;
+	margin-top: 15px;
+}
+
+.i365-po-widget__backup {
+	font-size: 12px;
+	color: #666;
+}
+
+.i365-po-widget__backup-label {
+	margin-right: 4px;
+}
+
+.i365-po-widget__backup-time {
+	color: #2271b1;
+}
+
+.i365-po-widget__actions .button {
+	font-size: 12px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+	.i365-po-widget__footer {
+		flex-direction: column;
+		gap: 10px;
+		text-align: center;
+	}
+}

@@ -21,6 +21,19 @@ class I365_PO_Settings {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 		add_action( 'load-settings_page_i365-po-settings', array( __CLASS__, 'add_help_tab' ) );
 		add_action( 'wp_ajax_i365_po_detect', array( __CLASS__, 'ajax_detect' ) );
+
+		// Backup & Restore AJAX handlers.
+		add_action( 'wp_ajax_i365_po_restore_backup', array( __CLASS__, 'ajax_restore_backup' ) );
+		add_action( 'wp_ajax_i365_po_delete_backup', array( __CLASS__, 'ajax_delete_backup' ) );
+
+		// Profile AJAX handlers.
+		add_action( 'wp_ajax_i365_po_apply_profile', array( __CLASS__, 'ajax_apply_profile' ) );
+		add_action( 'wp_ajax_i365_po_save_profile', array( __CLASS__, 'ajax_save_profile' ) );
+		add_action( 'wp_ajax_i365_po_delete_profile', array( __CLASS__, 'ajax_delete_profile' ) );
+
+		// Import/Export handlers.
+		add_action( 'wp_ajax_i365_po_export', array( __CLASS__, 'ajax_export' ) );
+		add_action( 'wp_ajax_i365_po_import', array( __CLASS__, 'ajax_import' ) );
 	}
 
 	/**
@@ -105,6 +118,28 @@ class I365_PO_Settings {
 					'running'  => __( 'Detecting from homepage…', '365i-performance-optimizer' ),
 					'failed'   => __( 'Detection failed. Check your homepage is reachable.', '365i-performance-optimizer' ),
 					'completed'=> __( 'Detection updated fields.', '365i-performance-optimizer' ),
+				),
+			)
+		);
+
+		// Utilities nonce and messages for backup/restore, profiles, import/export.
+		wp_localize_script(
+			'i365-po-admin',
+			'I365POUtilities',
+			array(
+				'nonce'    => wp_create_nonce( 'i365-po-utilities' ),
+				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				'messages' => array(
+					'confirmRestore'       => __( 'Restore this backup? Current settings will be backed up first.', '365i-performance-optimizer' ),
+					'confirmDeleteBackup'  => __( 'Delete this backup permanently?', '365i-performance-optimizer' ),
+					'confirmApplyProfile'  => __( 'Apply this profile? Current settings will be backed up first.', '365i-performance-optimizer' ),
+					'confirmDeleteProfile' => __( 'Delete this custom profile?', '365i-performance-optimizer' ),
+					'confirmImport'        => __( 'Import these settings? Current settings will be backed up first.', '365i-performance-optimizer' ),
+					'profileNameRequired'  => __( 'Please enter a profile name.', '365i-performance-optimizer' ),
+					'selectFile'           => __( 'Please select a JSON file to import.', '365i-performance-optimizer' ),
+					'invalidFile'          => __( 'Please select a valid JSON file.', '365i-performance-optimizer' ),
+					'processing'           => __( 'Processing…', '365i-performance-optimizer' ),
+					'error'                => __( 'An error occurred. Please try again.', '365i-performance-optimizer' ),
 				),
 			)
 		);
@@ -297,6 +332,13 @@ class I365_PO_Settings {
 								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Removes oEmbed discovery tags from the front end. Safe unless you need external sites to auto-discover embeds for your pages.', '365i-performance-optimizer' ) ); ?>">i</span>
 							</span>
 						</label>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[remove_query_strings]" value="1" <?php checked( $settings['remove_query_strings'] ); ?> />
+							<span>
+								<?php esc_html_e( 'Remove version query strings from assets', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Removes ?ver=x.x.x from CSS and JS URLs. Improves caching on some CDNs. Note: May cause cache issues if you update plugins frequently.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
 					</section>
 
 					<section class="i365-po-card">
@@ -324,6 +366,118 @@ class I365_PO_Settings {
 
 					<section class="i365-po-card">
 						<header>
+							<h2><?php esc_html_e( 'JavaScript Optimization', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Advanced JavaScript optimizations: delay script loading until user interaction and control WordPress Heartbeat API.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</h2>
+							<p><?php esc_html_e( 'Reduce initial JavaScript load for faster page rendering.', '365i-performance-optimizer' ); ?></p>
+						</header>
+
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Delay JavaScript Until Interaction', '365i-performance-optimizer' ); ?></h3>
+							<label class="i365-po-toggle">
+								<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[delay_js_enabled]" value="1" <?php checked( $settings['delay_js_enabled'] ); ?> />
+								<span>
+									<?php esc_html_e( 'Delay non-critical scripts until user interacts', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Scripts are not loaded until user scrolls, clicks, touches, or presses a key. Dramatically improves initial page load. jQuery, Elementor, and wp-* scripts are never delayed.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+							</label>
+							<label class="i365-po-field">
+								<span>
+									<?php esc_html_e( 'Fallback timeout (milliseconds)', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Scripts will load after this time even without interaction. Default: 5000ms (5 seconds). Range: 1000-30000ms.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+								<input type="number" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[delay_js_timeout]" value="<?php echo esc_attr( $settings['delay_js_timeout'] ); ?>" min="1000" max="30000" step="500" />
+							</label>
+							<label class="i365-po-field">
+								<span>
+									<?php esc_html_e( 'Additional excluded handles (one per line)', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Script handles that should never be delayed. jQuery, Elementor, and wp-* are always excluded automatically.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+								<textarea name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[delay_js_exclude]" rows="2" placeholder="custom-critical-script"><?php echo esc_textarea( implode( "\n", $settings['delay_js_exclude'] ) ); ?></textarea>
+							</label>
+						</div>
+
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Heartbeat API Control', '365i-performance-optimizer' ); ?></h3>
+							<label class="i365-po-field">
+								<span>
+									<?php esc_html_e( 'Heartbeat behavior', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'WordPress Heartbeat sends AJAX requests every 15-60 seconds. Reducing or disabling saves server resources.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+								<select name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[heartbeat_behavior]">
+									<?php
+									$heartbeat_options = array(
+										'default'           => __( 'Default (unchanged)', '365i-performance-optimizer' ),
+										'reduce'            => __( 'Reduce frequency', '365i-performance-optimizer' ),
+										'disable_frontend'  => __( 'Disable on frontend only', '365i-performance-optimizer' ),
+										'disable_everywhere'=> __( 'Disable everywhere (use with caution)', '365i-performance-optimizer' ),
+									);
+									foreach ( $heartbeat_options as $value => $label ) :
+										?>
+										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $settings['heartbeat_behavior'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+										<?php
+									endforeach;
+									?>
+								</select>
+							</label>
+							<label class="i365-po-field">
+								<span>
+									<?php esc_html_e( 'Reduced interval (seconds)', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Only applies when "Reduce frequency" is selected. Default: 60 seconds. Range: 15-300 seconds.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+								<input type="number" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[heartbeat_interval]" value="<?php echo esc_attr( $settings['heartbeat_interval'] ); ?>" min="15" max="300" step="5" />
+							</label>
+							<div class="i365-po-note">
+								<strong><?php esc_html_e( 'Note:', '365i-performance-optimizer' ); ?></strong>
+								<?php esc_html_e( 'Disabling Heartbeat everywhere may affect auto-save, post locking, and real-time notifications in the admin.', '365i-performance-optimizer' ); ?>
+							</div>
+						</div>
+					</section>
+
+					<?php if ( class_exists( 'WooCommerce' ) ) : ?>
+					<section class="i365-po-card">
+						<header>
+							<h2><?php esc_html_e( 'WooCommerce', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Conditionally load WooCommerce assets only on shop-related pages to reduce bloat on other pages.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</h2>
+							<p><?php esc_html_e( 'Reduce WooCommerce overhead on non-shop pages.', '365i-performance-optimizer' ); ?></p>
+						</header>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[wc_conditional_enabled]" value="1" <?php checked( $settings['wc_conditional_enabled'] ); ?> />
+							<span>
+								<?php esc_html_e( 'Enable conditional WooCommerce loading', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'When enabled, WooCommerce assets are only loaded on shop, product, cart, checkout, and account pages.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
+						<div class="i365-po-note">
+							<strong><?php esc_html_e( 'On non-shop pages, the following will be disabled:', '365i-performance-optimizer' ); ?></strong>
+						</div>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[wc_disable_cart_fragments]" value="1" <?php checked( $settings['wc_disable_cart_fragments'] ); ?> />
+							<span>
+								<?php esc_html_e( 'Cart fragments AJAX', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Disables the cart fragments script that updates the mini-cart. May affect mini-cart widgets on non-shop pages.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[wc_disable_styles]" value="1" <?php checked( $settings['wc_disable_styles'] ); ?> />
+							<span>
+								<?php esc_html_e( 'WooCommerce core styles', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Disables woocommerce-general, woocommerce-layout, and woocommerce-smallscreen stylesheets.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[wc_disable_blocks_styles]" value="1" <?php checked( $settings['wc_disable_blocks_styles'] ); ?> />
+							<span>
+								<?php esc_html_e( 'WooCommerce Blocks styles', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Disables WooCommerce Blocks stylesheets (wc-blocks-style, wc-blocks-vendors-style).', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
+					</section>
+					<?php endif; ?>
+
+					<section class="i365-po-card">
+						<header>
 							<h2><?php esc_html_e( 'Images', '365i-performance-optimizer' ); ?>
 								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Fine-tune LCP priority and lazy-loading. Helpful for hero imagery and above-the-fold content.', '365i-performance-optimizer' ) ); ?>">i</span>
 							</h2>
@@ -343,6 +497,227 @@ class I365_PO_Settings {
 								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Turns off lazy-loading for homepage images to avoid delaying above-the-fold content. Leave on if your homepage is very image-heavy below the fold.', '365i-performance-optimizer' ) ); ?>">i</span>
 							</span>
 						</label>
+					</section>
+
+					<section class="i365-po-card">
+						<header>
+							<h2><?php esc_html_e( 'Local Fonts', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Host Google Fonts locally for GDPR compliance, faster loading, and reduced external requests.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</h2>
+							<p><?php esc_html_e( 'Download and serve Google Fonts from your server instead of Google.', '365i-performance-optimizer' ); ?></p>
+						</header>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[local_fonts_enabled]" value="1" <?php checked( $settings['local_fonts_enabled'] ); ?> />
+							<span>
+								<?php esc_html_e( 'Enable local Google Fonts hosting', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'When enabled, Google Fonts CSS/files are downloaded and served locally. Eliminates external font requests.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
+						<label class="i365-po-field">
+							<span>
+								<?php esc_html_e( 'Font display behavior', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Controls how fonts are displayed while loading. "swap" shows fallback text immediately (recommended for performance).', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+							<select name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[local_fonts_display]">
+								<?php
+								$display_options = array(
+									'swap'     => __( 'swap (recommended)', '365i-performance-optimizer' ),
+									'block'    => __( 'block', '365i-performance-optimizer' ),
+									'fallback' => __( 'fallback', '365i-performance-optimizer' ),
+									'optional' => __( 'optional', '365i-performance-optimizer' ),
+									'auto'     => __( 'auto', '365i-performance-optimizer' ),
+								);
+								foreach ( $display_options as $value => $label ) :
+									?>
+									<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $settings['local_fonts_display'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+									<?php
+								endforeach;
+								?>
+							</select>
+						</label>
+						<label class="i365-po-toggle">
+							<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[local_fonts_preload]" value="1" <?php checked( $settings['local_fonts_preload'] ); ?> />
+							<span>
+								<?php esc_html_e( 'Add preload hints for font files', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Adds preload link tags for font files to improve loading performance.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+						</label>
+
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Font Management', '365i-performance-optimizer' ); ?></h3>
+							<?php
+							$fonts_info = I365_PO_Local_Fonts::get_fonts_info();
+							?>
+							<div class="i365-po-fonts-status" id="i365-po-fonts-status">
+								<?php if ( $fonts_info['has_fonts'] ) : ?>
+									<div class="i365-po-fonts-info">
+										<p>
+											<strong><?php esc_html_e( 'Status:', '365i-performance-optimizer' ); ?></strong>
+											<?php
+											printf(
+												/* translators: %d: number of font files */
+												esc_html__( '%d font files downloaded', '365i-performance-optimizer' ),
+												absint( $fonts_info['font_count'] )
+											);
+											?>
+										</p>
+										<?php if ( $fonts_info['downloaded'] ) : ?>
+											<p>
+												<strong><?php esc_html_e( 'Downloaded:', '365i-performance-optimizer' ); ?></strong>
+												<?php echo esc_html( human_time_diff( $fonts_info['downloaded'], time() ) . ' ' . __( 'ago', '365i-performance-optimizer' ) ); ?>
+											</p>
+										<?php endif; ?>
+										<?php if ( $fonts_info['disk_usage'] > 0 ) : ?>
+											<p>
+												<strong><?php esc_html_e( 'Disk usage:', '365i-performance-optimizer' ); ?></strong>
+												<?php echo esc_html( size_format( $fonts_info['disk_usage'] ) ); ?>
+											</p>
+										<?php endif; ?>
+									</div>
+								<?php else : ?>
+									<p class="i365-po-fonts-empty"><?php esc_html_e( 'No local fonts downloaded yet. Click "Download Fonts" to scan your site and download Google Fonts locally.', '365i-performance-optimizer' ); ?></p>
+								<?php endif; ?>
+							</div>
+							<div class="i365-po-fonts-actions">
+								<label class="i365-po-field i365-po-field--inline">
+									<span><?php esc_html_e( 'Google Fonts URL (optional):', '365i-performance-optimizer' ); ?></span>
+									<input type="url" id="i365-po-fonts-url" placeholder="https://fonts.googleapis.com/css2?family=..." class="regular-text" />
+								</label>
+								<div class="i365-po-fonts-buttons">
+									<button type="button" class="button button-primary" id="i365-po-download-fonts">
+										<?php esc_html_e( 'Download Fonts', '365i-performance-optimizer' ); ?>
+									</button>
+									<button type="button" class="button button-secondary" id="i365-po-clear-fonts" <?php disabled( ! $fonts_info['has_fonts'] ); ?>>
+										<?php esc_html_e( 'Clear Local Fonts', '365i-performance-optimizer' ); ?>
+									</button>
+								</div>
+							</div>
+							<p class="description"><?php esc_html_e( 'Leave the URL empty to auto-detect Google Fonts from your homepage. Or paste a specific Google Fonts URL.', '365i-performance-optimizer' ); ?></p>
+						</div>
+					</section>
+
+					<section class="i365-po-card">
+						<header>
+							<h2><?php esc_html_e( 'Database Cleanup', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Clean up database bloat: revisions, auto-drafts, spam, orphaned data, and expired transients.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</h2>
+							<p><?php esc_html_e( 'Remove unnecessary database entries to improve performance.', '365i-performance-optimizer' ); ?></p>
+						</header>
+
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Scheduled Cleanup', '365i-performance-optimizer' ); ?></h3>
+							<label class="i365-po-toggle">
+								<input type="checkbox" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[db_cleanup_enabled]" value="1" <?php checked( $settings['db_cleanup_enabled'] ); ?> />
+								<span>
+									<?php esc_html_e( 'Enable automatic scheduled cleanup', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Automatically clean database on a schedule. Runs all cleanup tasks.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+							</label>
+							<label class="i365-po-field">
+								<span>
+									<?php esc_html_e( 'Schedule', '365i-performance-optimizer' ); ?>
+								</span>
+								<select name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[db_cleanup_schedule]">
+									<?php
+									$schedule_options = array(
+										'daily'   => __( 'Daily', '365i-performance-optimizer' ),
+										'weekly'  => __( 'Weekly', '365i-performance-optimizer' ),
+										'monthly' => __( 'Monthly', '365i-performance-optimizer' ),
+									);
+									foreach ( $schedule_options as $value => $label ) :
+										?>
+										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $settings['db_cleanup_schedule'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+										<?php
+									endforeach;
+									?>
+								</select>
+							</label>
+							<label class="i365-po-field">
+								<span>
+									<?php esc_html_e( 'Revisions to keep per post', '365i-performance-optimizer' ); ?>
+									<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Number of revisions to keep for each post. Set to 0 to remove all revisions. Range: 0-50.', '365i-performance-optimizer' ) ); ?>">i</span>
+								</span>
+								<input type="number" name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[db_revisions_keep]" value="<?php echo esc_attr( $settings['db_revisions_keep'] ); ?>" min="0" max="50" step="1" />
+							</label>
+						</div>
+
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Manual Cleanup', '365i-performance-optimizer' ); ?></h3>
+							<p class="description"><?php esc_html_e( 'Analyze and clean specific database items. A backup is created before cleanup.', '365i-performance-optimizer' ); ?></p>
+							<div class="i365-po-db-actions">
+								<button type="button" class="button button-secondary" id="i365-po-db-analyze">
+									<?php esc_html_e( 'Analyze Database', '365i-performance-optimizer' ); ?>
+								</button>
+								<button type="button" class="button button-primary" id="i365-po-db-cleanup" disabled>
+									<?php esc_html_e( 'Clean Selected', '365i-performance-optimizer' ); ?>
+								</button>
+							</div>
+							<div id="i365-po-db-stats-container" class="i365-po-db-stats-container">
+								<p class="i365-po-db-placeholder"><?php esc_html_e( 'Click "Analyze Database" to see cleanup options.', '365i-performance-optimizer' ); ?></p>
+							</div>
+						</div>
+					</section>
+
+					<section class="i365-po-card i365-po-card--utilities">
+						<header>
+							<h2><?php esc_html_e( 'Utilities', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Backup/restore settings, apply preset profiles, and import/export configurations.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</h2>
+							<p><?php esc_html_e( 'Manage backups, profiles, and transfer settings between sites.', '365i-performance-optimizer' ); ?></p>
+						</header>
+
+						<!-- Profiles Section -->
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Configuration Profiles', '365i-performance-optimizer' ); ?></h3>
+							<p class="description"><?php esc_html_e( 'Quickly apply preset configurations or save your current settings as a custom profile.', '365i-performance-optimizer' ); ?></p>
+							<div id="i365-po-profiles-container">
+								<?php echo self::render_profiles_list(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</div>
+							<div class="i365-po-save-profile">
+								<input type="text" id="i365-po-profile-name" placeholder="<?php esc_attr_e( 'New profile name', '365i-performance-optimizer' ); ?>" class="regular-text" />
+								<input type="text" id="i365-po-profile-desc" placeholder="<?php esc_attr_e( 'Description (optional)', '365i-performance-optimizer' ); ?>" class="regular-text" />
+								<button type="button" class="button button-secondary" id="i365-po-save-profile">
+									<?php esc_html_e( 'Save Current as Profile', '365i-performance-optimizer' ); ?>
+								</button>
+							</div>
+						</div>
+
+						<!-- Backups Section -->
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Settings Backups', '365i-performance-optimizer' ); ?></h3>
+							<p class="description">
+								<?php
+								printf(
+									/* translators: %d: maximum number of backups */
+									esc_html__( 'Automatic backups are created before each save. Up to %d backups are retained.', '365i-performance-optimizer' ),
+									absint( I365_PO_Plugin::MAX_BACKUPS )
+								);
+								?>
+							</p>
+							<div id="i365-po-backups-container">
+								<?php echo self::render_backups_list(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</div>
+						</div>
+
+						<!-- Import/Export Section -->
+						<div class="i365-po-subsection">
+							<h3><?php esc_html_e( 'Import / Export', '365i-performance-optimizer' ); ?></h3>
+							<p class="description"><?php esc_html_e( 'Transfer settings between sites or create a backup file.', '365i-performance-optimizer' ); ?></p>
+							<div class="i365-po-import-export">
+								<div class="i365-po-export">
+									<button type="button" class="button button-secondary" id="i365-po-export">
+										<?php esc_html_e( 'Export Settings', '365i-performance-optimizer' ); ?>
+									</button>
+								</div>
+								<div class="i365-po-import">
+									<input type="file" id="i365-po-import-file" accept=".json" style="display:none;" />
+									<button type="button" class="button button-secondary" id="i365-po-import-btn">
+										<?php esc_html_e( 'Import Settings', '365i-performance-optimizer' ); ?>
+									</button>
+									<span class="i365-po-import-filename" id="i365-po-import-filename"></span>
+								</div>
+							</div>
+						</div>
 					</section>
 				</div>
 
@@ -883,5 +1258,302 @@ class I365_PO_Settings {
 					'<p>' . esc_html__( 'Use Auto-detect to fill fields from your active theme. Exclude checkout/cart paths from speculation. Save to apply changes; Restore defaults to undo.', '365i-performance-optimizer' ) . '</p>',
 			)
 		);
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Backup & Restore AJAX Handlers
+	|--------------------------------------------------------------------------
+	*/
+
+	/**
+	 * AJAX: Restore settings from a backup.
+	 *
+	 * @return void
+	 */
+	public static function ajax_restore_backup() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		$timestamp = isset( $_POST['timestamp'] ) ? absint( $_POST['timestamp'] ) : 0;
+
+		if ( empty( $timestamp ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid backup timestamp.', '365i-performance-optimizer' ) ) );
+		}
+
+		$result = I365_PO_Plugin::restore_backup( $timestamp );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success( array(
+			'message' => __( 'Settings restored successfully. Page will reload.', '365i-performance-optimizer' ),
+			'reload'  => true,
+		) );
+	}
+
+	/**
+	 * AJAX: Delete a specific backup.
+	 *
+	 * @return void
+	 */
+	public static function ajax_delete_backup() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		$timestamp = isset( $_POST['timestamp'] ) ? absint( $_POST['timestamp'] ) : 0;
+
+		if ( empty( $timestamp ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid backup timestamp.', '365i-performance-optimizer' ) ) );
+		}
+
+		$result = I365_PO_Plugin::delete_backup( $timestamp );
+
+		if ( ! $result ) {
+			wp_send_json_error( array( 'message' => __( 'Failed to delete backup.', '365i-performance-optimizer' ) ) );
+		}
+
+		wp_send_json_success( array(
+			'message' => __( 'Backup deleted.', '365i-performance-optimizer' ),
+			'backups' => self::render_backups_list(),
+		) );
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Profile AJAX Handlers
+	|--------------------------------------------------------------------------
+	*/
+
+	/**
+	 * AJAX: Apply a profile.
+	 *
+	 * @return void
+	 */
+	public static function ajax_apply_profile() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		$slug = isset( $_POST['profile'] ) ? sanitize_text_field( wp_unslash( $_POST['profile'] ) ) : '';
+
+		if ( empty( $slug ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid profile.', '365i-performance-optimizer' ) ) );
+		}
+
+		$result = I365_PO_Plugin::apply_profile( $slug );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		$profiles = I365_PO_Plugin::get_all_profiles();
+		$profile_name = isset( $profiles[ $slug ]['name'] ) ? $profiles[ $slug ]['name'] : $slug;
+
+		wp_send_json_success( array(
+			'message' => sprintf(
+				/* translators: %s: profile name */
+				__( 'Profile "%s" applied. Page will reload.', '365i-performance-optimizer' ),
+				$profile_name
+			),
+			'reload' => true,
+		) );
+	}
+
+	/**
+	 * AJAX: Save current settings as a custom profile.
+	 *
+	 * @return void
+	 */
+	public static function ajax_save_profile() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		$name        = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+
+		if ( empty( $name ) ) {
+			wp_send_json_error( array( 'message' => __( 'Profile name is required.', '365i-performance-optimizer' ) ) );
+		}
+
+		$result = I365_PO_Plugin::save_profile( $name, $description );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success( array(
+			'message'  => sprintf(
+				/* translators: %s: profile name */
+				__( 'Profile "%s" saved.', '365i-performance-optimizer' ),
+				$name
+			),
+			'profiles' => self::render_profiles_list(),
+		) );
+	}
+
+	/**
+	 * AJAX: Delete a custom profile.
+	 *
+	 * @return void
+	 */
+	public static function ajax_delete_profile() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		$slug = isset( $_POST['profile'] ) ? sanitize_text_field( wp_unslash( $_POST['profile'] ) ) : '';
+
+		if ( empty( $slug ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid profile.', '365i-performance-optimizer' ) ) );
+		}
+
+		$result = I365_PO_Plugin::delete_profile( $slug );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success( array(
+			'message'  => __( 'Profile deleted.', '365i-performance-optimizer' ),
+			'profiles' => self::render_profiles_list(),
+		) );
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Import/Export AJAX Handlers
+	|--------------------------------------------------------------------------
+	*/
+
+	/**
+	 * AJAX: Export settings as JSON.
+	 *
+	 * @return void
+	 */
+	public static function ajax_export() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		$json = I365_PO_Plugin::export_settings();
+
+		wp_send_json_success( array(
+			'json'     => $json,
+			'filename' => 'performance-optimizer-settings-' . gmdate( 'Y-m-d' ) . '.json',
+		) );
+	}
+
+	/**
+	 * AJAX: Import settings from JSON.
+	 *
+	 * @return void
+	 */
+	public static function ajax_import() {
+		check_ajax_referer( 'i365-po-utilities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON needs to be parsed, sanitization happens in import_settings().
+		$json = isset( $_POST['json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['json'] ) ) : '';
+
+		if ( empty( $json ) ) {
+			wp_send_json_error( array( 'message' => __( 'No settings data provided.', '365i-performance-optimizer' ) ) );
+		}
+
+		$result = I365_PO_Plugin::import_settings( $json );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success( array(
+			'message' => __( 'Settings imported successfully. Page will reload.', '365i-performance-optimizer' ),
+			'reload'  => true,
+		) );
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Helper Render Methods
+	|--------------------------------------------------------------------------
+	*/
+
+	/**
+	 * Render backups list HTML for AJAX response.
+	 *
+	 * @return string HTML.
+	 */
+	private static function render_backups_list() {
+		$backups = I365_PO_Plugin::get_backups();
+
+		if ( empty( $backups ) ) {
+			return '<p class="i365-po-empty">' . esc_html__( 'No backups available.', '365i-performance-optimizer' ) . '</p>';
+		}
+
+		$html = '<ul class="i365-po-backups-list">';
+		foreach ( $backups as $timestamp => $backup ) {
+			$date = wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $timestamp );
+			$user = ! empty( $backup['user'] ) ? $backup['user'] : __( 'Unknown', '365i-performance-optimizer' );
+			$version = ! empty( $backup['version'] ) ? $backup['version'] : '?';
+
+			$html .= '<li class="i365-po-backup-item" data-timestamp="' . esc_attr( $timestamp ) . '">';
+			$html .= '<span class="i365-po-backup-date">' . esc_html( $date ) . '</span>';
+			/* translators: %1$s: user name or ID, %2$s: plugin version */
+			$html .= '<span class="i365-po-backup-meta">' . esc_html( sprintf( __( 'by %1$s (v%2$s)', '365i-performance-optimizer' ), $user, $version ) ) . '</span>';
+			$html .= '<span class="i365-po-backup-actions">';
+			$html .= '<button type="button" class="button button-small i365-po-restore-backup" data-timestamp="' . esc_attr( $timestamp ) . '">' . esc_html__( 'Restore', '365i-performance-optimizer' ) . '</button>';
+			$html .= '<button type="button" class="button button-small button-link-delete i365-po-delete-backup" data-timestamp="' . esc_attr( $timestamp ) . '">' . esc_html__( 'Delete', '365i-performance-optimizer' ) . '</button>';
+			$html .= '</span>';
+			$html .= '</li>';
+		}
+		$html .= '</ul>';
+
+		return $html;
+	}
+
+	/**
+	 * Render profiles list HTML for AJAX response.
+	 *
+	 * @return string HTML.
+	 */
+	private static function render_profiles_list() {
+		$profiles = I365_PO_Plugin::get_all_profiles();
+
+		$html = '<div class="i365-po-profiles-grid">';
+		foreach ( $profiles as $slug => $profile ) {
+			$is_builtin = ! empty( $profile['builtin'] );
+			$html .= '<div class="i365-po-profile-card' . ( $is_builtin ? ' is-builtin' : '' ) . '" data-slug="' . esc_attr( $slug ) . '">';
+			$html .= '<h4>' . esc_html( $profile['name'] ) . '</h4>';
+			$html .= '<p>' . esc_html( $profile['description'] ) . '</p>';
+			$html .= '<div class="i365-po-profile-actions">';
+			$html .= '<button type="button" class="button button-small i365-po-apply-profile" data-profile="' . esc_attr( $slug ) . '">' . esc_html__( 'Apply', '365i-performance-optimizer' ) . '</button>';
+			if ( ! $is_builtin ) {
+				$html .= '<button type="button" class="button button-small button-link-delete i365-po-delete-profile" data-profile="' . esc_attr( $slug ) . '">' . esc_html__( 'Delete', '365i-performance-optimizer' ) . '</button>';
+			}
+			$html .= '</div>';
+			$html .= '</div>';
+		}
+		$html .= '</div>';
+
+		return $html;
 	}
 }
