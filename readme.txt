@@ -4,7 +4,7 @@ Tags: performance, speed, cache, elementor, woocommerce
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,6 +104,11 @@ Yes. Each site in a multisite network has its own settings. Network activation i
 6. Dashboard widget showing active optimizations at a glance.
 
 == Changelog ==
+
+= 2.0.1 =
+* FIX: Critical error when saving settings due to preg_split receiving array instead of string.
+* FIX: Local Fonts download button now works even when feature is disabled.
+* FIX: Documented pro-elements-handlers exclusion needed for Elementor Pro nav menus with JS delay.
 
 = 2.0.0 =
 * NEW: Settings backup system with 5 automatic snapshots and one-click restore.

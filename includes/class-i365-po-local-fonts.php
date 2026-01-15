@@ -37,9 +37,13 @@ class I365_PO_Local_Fonts {
 	 * @return void
 	 */
 	public static function init() {
+		// AJAX handlers must always be registered so admin can download fonts.
+		add_action( 'wp_ajax_i365_po_download_fonts', array( __CLASS__, 'ajax_download_fonts' ) );
+		add_action( 'wp_ajax_i365_po_clear_fonts', array( __CLASS__, 'ajax_clear_fonts' ) );
+
 		$settings = I365_PO_Plugin::get_settings();
 
-		// Only run if enabled.
+		// Frontend hooks only run if enabled.
 		if ( empty( $settings['local_fonts_enabled'] ) ) {
 			return;
 		}
@@ -49,10 +53,6 @@ class I365_PO_Local_Fonts {
 		add_action( 'wp_head', array( __CLASS__, 'output_font_preloads' ), 1 );
 		add_filter( 'style_loader_src', array( __CLASS__, 'intercept_google_fonts' ), 10, 2 );
 		add_action( 'wp_print_styles', array( __CLASS__, 'dequeue_google_fonts' ), 100 );
-
-		// AJAX handler for manual font download.
-		add_action( 'wp_ajax_i365_po_download_fonts', array( __CLASS__, 'ajax_download_fonts' ) );
-		add_action( 'wp_ajax_i365_po_clear_fonts', array( __CLASS__, 'ajax_clear_fonts' ) );
 	}
 
 	/**

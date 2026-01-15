@@ -216,7 +216,12 @@ class I365_PO_Plugin {
 		$output['speculation_eagerness'] = in_array( $speculation_eagerness, array( 'eager', 'moderate', 'conservative' ), true ) ? $speculation_eagerness : $defaults['speculation_eagerness'];
 		$output['speculation_exclusions'] = array();
 		if ( ! empty( $input['speculation_exclusions'] ) ) {
-			$exclusions = preg_split( '/[\r\n,]+/', $input['speculation_exclusions'], -1, PREG_SPLIT_NO_EMPTY );
+			$exclusions_input = $input['speculation_exclusions'];
+			if ( is_array( $exclusions_input ) ) {
+				$exclusions = array_filter( $exclusions_input );
+			} else {
+				$exclusions = preg_split( '/[\r\n,]+/', $exclusions_input, -1, PREG_SPLIT_NO_EMPTY );
+			}
 			foreach ( (array) $exclusions as $path ) {
 				$path = sanitize_text_field( $path );
 				$path = '/' . ltrim( trim( $path ), '/' );
@@ -226,12 +231,17 @@ class I365_PO_Plugin {
 
 		$output['enable_preload'] = ! empty( $input['enable_preload'] );
 
-		$hosts = array_filter(
-			array_map(
-				'trim',
-				preg_split( '/[\r\n,]+/', $input['preconnect_hosts'] ?? '', -1, PREG_SPLIT_NO_EMPTY )
-			)
-		);
+		$hosts_input = $input['preconnect_hosts'] ?? '';
+		if ( is_array( $hosts_input ) ) {
+			$hosts = array_filter( array_map( 'trim', $hosts_input ) );
+		} else {
+			$hosts = array_filter(
+				array_map(
+					'trim',
+					preg_split( '/[\r\n,]+/', $hosts_input, -1, PREG_SPLIT_NO_EMPTY )
+				)
+			);
+		}
 		$output['preconnect_hosts'] = array();
 		foreach ( $hosts as $host ) {
 			$sanitized = esc_url_raw( $host );
@@ -250,8 +260,13 @@ class I365_PO_Plugin {
 
 		$output['defer_scripts'] = ! empty( $input['defer_scripts'] );
 
-		$handles_raw  = preg_split( '/[\r\n,]+/', $input['excluded_defer_handles'] ?? '', -1, PREG_SPLIT_NO_EMPTY );
-		$handles      = array();
+		$handles_input = $input['excluded_defer_handles'] ?? '';
+		if ( is_array( $handles_input ) ) {
+			$handles_raw = array_filter( $handles_input );
+		} else {
+			$handles_raw = preg_split( '/[\r\n,]+/', $handles_input, -1, PREG_SPLIT_NO_EMPTY );
+		}
+		$handles = array();
 		if ( is_array( $handles_raw ) ) {
 			foreach ( $handles_raw as $handle ) {
 				$handle = sanitize_text_field( $handle );
@@ -276,8 +291,13 @@ class I365_PO_Plugin {
 		// Clamp timeout between 1000ms and 30000ms.
 		$output['delay_js_timeout'] = max( 1000, min( 30000, $output['delay_js_timeout'] ) );
 
-		$delay_exclude_raw = preg_split( '/[\r\n,]+/', $input['delay_js_exclude'] ?? '', -1, PREG_SPLIT_NO_EMPTY );
-		$delay_exclude     = array();
+		$delay_input = $input['delay_js_exclude'] ?? '';
+		if ( is_array( $delay_input ) ) {
+			$delay_exclude_raw = array_filter( $delay_input );
+		} else {
+			$delay_exclude_raw = preg_split( '/[\r\n,]+/', $delay_input, -1, PREG_SPLIT_NO_EMPTY );
+		}
+		$delay_exclude = array();
 		if ( is_array( $delay_exclude_raw ) ) {
 			foreach ( $delay_exclude_raw as $handle ) {
 				$handle = sanitize_text_field( trim( $handle ) );
