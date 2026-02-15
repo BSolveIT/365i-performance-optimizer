@@ -53,6 +53,20 @@ class I365_PO_Plugin {
 	public static function init() {
 		register_activation_hook( I365_PO_PLUGIN_FILE, array( __CLASS__, 'activate' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'bootstrap' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( I365_PO_PLUGIN_FILE ), array( __CLASS__, 'action_links' ) );
+	}
+
+	/**
+	 * Add Settings link to plugin row on Plugins page.
+	 *
+	 * @param array $links Existing action links.
+	 * @return array
+	 */
+	public static function action_links( $links ) {
+		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=i365-po-settings' ) ) . '">'
+			. esc_html__( 'Settings', '365i-performance-optimizer' ) . '</a>';
+		array_unshift( $links, $settings_link );
+		return $links;
 	}
 
 	/**
@@ -77,6 +91,7 @@ class I365_PO_Plugin {
 		require_once I365_PO_PLUGIN_DIR . 'includes/class-i365-po-dashboard-widget.php';
 		require_once I365_PO_PLUGIN_DIR . 'includes/class-i365-po-woocommerce.php';
 		require_once I365_PO_PLUGIN_DIR . 'includes/class-i365-po-database.php';
+		require_once I365_PO_PLUGIN_DIR . 'includes/class-i365-po-font-detection.php';
 		require_once I365_PO_PLUGIN_DIR . 'includes/class-i365-po-local-fonts.php';
 		require_once I365_PO_PLUGIN_DIR . 'includes/class-i365-po-meta-box.php';
 

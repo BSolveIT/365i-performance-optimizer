@@ -445,6 +445,41 @@
 }
 
 .i365-po-detect-log.is-visible { display: block; }
+.i365-po-detect-log.is-error { border-color: #d63638; }
+
+.i365-po-fonts-detect-log__header {
+	margin-bottom: 8px;
+	font-family: var(--i365-font);
+	font-size: 0.8125rem;
+}
+
+.i365-po-fonts-detect-log__content {
+	margin: 0;
+	padding: 10px;
+	background: #1e1e2e;
+	color: #cdd6f4;
+	border-radius: 4px;
+	font-family: 'SF Mono', 'Consolas', monospace;
+	font-size: 0.6875rem;
+	line-height: 1.6;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	max-height: 220px;
+	overflow-y: auto;
+}
+
+.i365-po-fonts-detect-log__content .log-success { color: #a6e3a1; }
+.i365-po-fonts-detect-log__content .log-error { color: #f38ba8; }
+
+.i365-po-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	background: var(--i365-accent);
+	color: #fff;
+	border-radius: 3px;
+	font-size: 0.6875rem;
+	text-transform: capitalize;
+}
 
 /* Suggestions */
 .i365-po-suggestions {

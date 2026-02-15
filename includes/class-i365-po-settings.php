@@ -593,6 +593,7 @@ class I365_PO_Settings {
 								</div>
 							</div>
 							<p class="description"><?php esc_html_e( 'Leave the URL empty to auto-detect Google Fonts from your homepage. Or paste a specific Google Fonts URL.', '365i-performance-optimizer' ); ?></p>
+							<div id="i365-po-fonts-detect-log" class="i365-po-detect-log" aria-live="polite"></div>
 						</div>
 					</section>
 
@@ -671,7 +672,7 @@ class I365_PO_Settings {
 							<h3><?php esc_html_e( 'Configuration Profiles', '365i-performance-optimizer' ); ?></h3>
 							<p class="description"><?php esc_html_e( 'Quickly apply preset configurations or save your current settings as a custom profile.', '365i-performance-optimizer' ); ?></p>
 							<div id="i365-po-profiles-container">
-								<?php echo self::render_profiles_list(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+								<?php echo self::render_profiles_list(); ?>
 							</div>
 							<div class="i365-po-save-profile">
 								<input type="text" id="i365-po-profile-name" placeholder="<?php esc_attr_e( 'New profile name', '365i-performance-optimizer' ); ?>" class="regular-text" />
@@ -695,7 +696,7 @@ class I365_PO_Settings {
 								?>
 							</p>
 							<div id="i365-po-backups-container">
-								<?php echo self::render_backups_list(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+								<?php echo self::render_backups_list(); ?>
 							</div>
 						</div>
 
@@ -1472,7 +1473,6 @@ class I365_PO_Settings {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON needs to be parsed, sanitization happens in import_settings().
 		$json = isset( $_POST['json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['json'] ) ) : '';
 
 		if ( empty( $json ) ) {

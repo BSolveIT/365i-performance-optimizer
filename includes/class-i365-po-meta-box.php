@@ -231,7 +231,6 @@ class I365_PO_Meta_Box {
 
 		// Get and sanitize overrides.
 		$overrides = array();
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Individual values are sanitized below.
 		$raw_input = isset( $_POST['i365_po_overrides'] ) ? (array) wp_unslash( $_POST['i365_po_overrides'] ) : array();
 
 		// Sanitize checkbox values.

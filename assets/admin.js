@@ -688,8 +688,12 @@
 					if ( response.success ) {
 						showToast( response.data.message );
 						updateFontsStatus( response.data.fonts_info );
+						renderFontsDetectionLog( response.data.detect_log, response.data.strategy, false );
 					} else {
-						showToast( response.data.message || utils.messages.error, true );
+						const msg = response.data.message || utils.messages.error;
+						const suggestion = response.data.suggestion || '';
+						showToast( msg + ( suggestion ? ' ' + suggestion : '' ), true );
+						renderFontsDetectionLog( response.data.detect_log, '', true );
 					}
 					downloadFontsBtn.disabled = false;
 					downloadFontsBtn.textContent = 'Download Fonts';
@@ -728,6 +732,54 @@
 					clearFontsBtn.textContent = 'Clear Local Fonts';
 				} );
 		} );
+	}
+
+	/**
+	 * Render font detection log in the fonts section.
+	 */
+	function renderFontsDetectionLog( log, strategy, isError ) {
+		const container = document.getElementById( 'i365-po-fonts-detect-log' );
+		if ( ! container ) {
+			return;
+		}
+
+		if ( ! log || ! log.length ) {
+			container.innerHTML = '';
+			container.classList.remove( 'is-visible' );
+			return;
+		}
+
+		let html = '<div class="i365-po-fonts-detect-log__header">';
+		html += '<strong>Detection Log</strong>';
+		if ( strategy && strategy !== 'manual_url' ) {
+			html += ' <span class="i365-po-badge">Strategy: ' + strategy.replace( /_/g, ' ' ) + '</span>';
+		}
+		html += '</div>';
+		html += '<pre class="i365-po-fonts-detect-log__content">';
+		log.forEach( function ( line ) {
+			const escaped = escapeHtml( line );
+			if ( line.indexOf( 'FOUND' ) !== -1 ) {
+				html += '<span class="log-success">' + escaped + '</span>\n';
+			} else if ( line.indexOf( 'ERROR' ) !== -1 ) {
+				html += '<span class="log-error">' + escaped + '</span>\n';
+			} else {
+				html += escaped + '\n';
+			}
+		} );
+		html += '</pre>';
+
+		container.innerHTML = html;
+		container.classList.add( 'is-visible' );
+		container.classList.toggle( 'is-error', isError );
+	}
+
+	/**
+	 * Escape HTML entities.
+	 */
+	function escapeHtml( text ) {
+		const div = document.createElement( 'div' );
+		div.textContent = text;
+		return div.innerHTML;
 	}
 
 	/**

@@ -47,8 +47,6 @@ class I365_PO_Database {
 	public static function get_cleanup_stats() {
 		global $wpdb;
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Database cleanup requires fresh counts, caching not appropriate.
-
 		$settings = I365_PO_Plugin::get_settings();
 		$revisions_keep = isset( $settings['db_revisions_keep'] ) ? absint( $settings['db_revisions_keep'] ) : 5;
 
@@ -142,8 +140,6 @@ class I365_PO_Database {
 			'desc'  => '',
 		);
 
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-
 		return $stats;
 	}
 
@@ -156,8 +152,6 @@ class I365_PO_Database {
 	 */
 	private static function count_excess_revisions( $keep ) {
 		global $wpdb;
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Database cleanup requires fresh counts.
 
 		if ( $keep <= 0 ) {
 			// Count all revisions.
@@ -178,8 +172,6 @@ class I365_PO_Database {
 			$keep
 		) );
 
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-
 		return (int) $excess;
 	}
 
@@ -192,8 +184,6 @@ class I365_PO_Database {
 	 */
 	public static function run_cleanup( $items ) {
 		global $wpdb;
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Database cleanup operations require direct queries.
 
 		$settings = I365_PO_Plugin::get_settings();
 		$revisions_keep = isset( $settings['db_revisions_keep'] ) ? absint( $settings['db_revisions_keep'] ) : 5;
@@ -261,8 +251,6 @@ class I365_PO_Database {
 			$results['expired_transients'] = self::cleanup_expired_transients();
 		}
 
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-
 		return $results;
 	}
 
@@ -275,8 +263,6 @@ class I365_PO_Database {
 	 */
 	private static function cleanup_revisions( $keep ) {
 		global $wpdb;
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Database cleanup operations.
 
 		$deleted = 0;
 
@@ -313,14 +299,11 @@ class I365_PO_Database {
 
 				if ( ! empty( $revision_ids ) ) {
 					$ids_string = implode( ',', array_map( 'absint', $revision_ids ) );
-					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- IDs are sanitized with absint().
 					$wpdb->query( "DELETE FROM {$wpdb->posts} WHERE ID IN ({$ids_string})" );
 					$deleted += count( $revision_ids );
 				}
 			}
 		}
-
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 		return $deleted;
 	}
@@ -332,8 +315,6 @@ class I365_PO_Database {
 	 */
 	private static function cleanup_expired_transients() {
 		global $wpdb;
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transient cleanup requires direct query.
 
 		$deleted = 0;
 
@@ -354,8 +335,6 @@ class I365_PO_Database {
 			delete_transient( $transient );
 			$deleted++;
 		}
-
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 		return $deleted;
 	}
@@ -421,7 +400,6 @@ class I365_PO_Database {
 		}
 
 		// Get items to clean.
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitization happens with array_map sanitize_text_field.
 		$items = isset( $_POST['items'] ) ? array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['items'] ) ) : array();
 
 		if ( empty( $items ) ) {

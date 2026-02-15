@@ -35,12 +35,10 @@ if ( is_dir( $i365_po_fonts_dir ) ) {
 	if ( $i365_po_files ) {
 		foreach ( $i365_po_files as $i365_po_file ) {
 			if ( is_file( $i365_po_file ) ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
-				unlink( $i365_po_file );
+				wp_delete_file( $i365_po_file );
 			}
 		}
 	}
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
 	rmdir( $i365_po_fonts_dir );
 }
 

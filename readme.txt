@@ -4,7 +4,7 @@ Tags: performance, speed, cache, elementor, woocommerce
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,6 +104,15 @@ Yes. Each site in a multisite network has its own settings. Network activation i
 6. Dashboard widget showing active optimizations at a glance.
 
 == Changelog ==
+
+= 2.1.1 =
+* FIX: Script deferral and JS delay now use dependency-aware exclusion. When a script is excluded (e.g. wp-util), all of its dependencies (underscore, react, backbone, etc.) are automatically excluded too. Prevents "X is not defined" console errors.
+
+= 2.1.0 =
+* NEW: Multi-strategy Google Fonts detection for Local Fonts feature. Now detects fonts even when other plugins have replaced or removed Google Fonts URLs.
+* NEW: 6 detection strategies: direct link, @import, broad URL scan, CSS font-family parsing with URL construction, theme.json scanning, and theme file scanning.
+* NEW: Detection log panel shows exactly what was tried during font auto-detection, with color-coded results.
+* IMPROVED: Helpful suggestions displayed when auto-detection fails, guiding users to provide a manual URL.
 
 = 2.0.1 =
 * FIX: Critical error when saving settings due to preg_split receiving array instead of string.

@@ -143,7 +143,7 @@ class I365_PO_Frontend {
 	}
 
 	/**
-	 * Determine if a handle should be skipped.
+	 * Determine if a handle should be skipped from deferral.
 	 *
 	 * @param string $handle  Current handle.
 	 * @param array  $exclude Exclusion list.
@@ -155,6 +155,21 @@ class I365_PO_Frontend {
 			return true;
 		}
 
+		// Check against the full non-deferrable set (excluded handles + their dependencies).
+		$non_deferrable = self::get_non_deferrable_handles( $exclude );
+
+		return isset( $non_deferrable[ $handle ] );
+	}
+
+	/**
+	 * Check if a handle matches exclusion patterns (hardcoded + user list).
+	 *
+	 * @param string $handle  Script handle.
+	 * @param array  $exclude User exclusion list.
+	 *
+	 * @return bool
+	 */
+	private static function matches_exclusion_pattern( $handle, $exclude ) {
 		if ( strpos( $handle, 'elementor' ) !== false || strpos( $handle, 'jquery' ) !== false || strpos( $handle, 'wp-' ) === 0 ) {
 			return true;
 		}
@@ -166,6 +181,53 @@ class I365_PO_Frontend {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Build the full set of handles that must not be deferred.
+	 *
+	 * Includes explicitly excluded handles AND all of their recursive
+	 * dependencies. This prevents errors where a non-deferred script
+	 * depends on a deferred one (e.g. wp-util depends on underscore).
+	 *
+	 * @param array $exclude User exclusion list.
+	 *
+	 * @return array Associative array of handle => true.
+	 */
+	private static function get_non_deferrable_handles( $exclude ) {
+		static $cache = null;
+		if ( null !== $cache ) {
+			return $cache;
+		}
+
+		$wp_scripts     = wp_scripts();
+		$non_deferrable = array();
+
+		// First pass: find all explicitly excluded handles.
+		foreach ( $wp_scripts->registered as $handle => $dep_obj ) {
+			if ( self::matches_exclusion_pattern( $handle, $exclude ) ) {
+				$non_deferrable[ $handle ] = true;
+			}
+		}
+
+		// Second pass: for each excluded handle, mark all its dependencies
+		// as non-deferrable too (breadth-first).
+		$to_process = array_keys( $non_deferrable );
+		while ( ! empty( $to_process ) ) {
+			$current = array_pop( $to_process );
+			if ( ! isset( $wp_scripts->registered[ $current ] ) ) {
+				continue;
+			}
+			foreach ( $wp_scripts->registered[ $current ]->deps as $dep ) {
+				if ( ! isset( $non_deferrable[ $dep ] ) ) {
+					$non_deferrable[ $dep ] = true;
+					$to_process[]           = $dep;
+				}
+			}
+		}
+
+		$cache = $non_deferrable;
+		return $cache;
 	}
 
 	/**
@@ -220,7 +282,7 @@ class I365_PO_Frontend {
 		foreach ( $settings['preconnect_hosts'] as $host ) {
 			$is_cross = ( wp_parse_url( $host, PHP_URL_HOST ) !== wp_parse_url( home_url(), PHP_URL_HOST ) );
 			$cross    = $is_cross ? ' crossorigin' : '';
-			printf( '<link rel="preconnect" href="%1$s"%2$s>%3$s', esc_url( $host ), $cross, "\n" ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			printf( '<link rel="preconnect" href="%1$s"%2$s>%3$s', esc_url( $host ), $cross, "\n" );
 		}
 
 		if ( ! empty( $settings['preload_font'] ) ) {
@@ -410,13 +472,28 @@ class I365_PO_Frontend {
 	 * @return bool
 	 */
 	private static function is_delay_excluded( $handle, $exclude ) {
-		// Always exclude critical scripts.
-		$always_exclude = array( 'jquery', 'jquery-core', 'jquery-migrate', 'elementor' );
+		if ( I365_PO_Plugin::is_elementor_editor() ) {
+			return true;
+		}
 
-		foreach ( $always_exclude as $skip ) {
-			if ( $skip === $handle || strpos( $handle, $skip ) !== false ) {
-				return true;
-			}
+		// Check against the full non-delayable set (excluded handles + their dependencies).
+		$non_delayable = self::get_non_delayable_handles( $exclude );
+
+		return isset( $non_delayable[ $handle ] );
+	}
+
+	/**
+	 * Check if a handle matches delay exclusion patterns.
+	 *
+	 * @param string $handle  Script handle.
+	 * @param array  $exclude User exclusion list.
+	 *
+	 * @return bool
+	 */
+	private static function matches_delay_exclusion_pattern( $handle, $exclude ) {
+		// Always exclude critical scripts.
+		if ( strpos( $handle, 'jquery' ) !== false || strpos( $handle, 'elementor' ) !== false ) {
+			return true;
 		}
 
 		// Check wp-* prefix.
@@ -439,6 +516,51 @@ class I365_PO_Frontend {
 	}
 
 	/**
+	 * Build the full set of handles that must not be delayed.
+	 *
+	 * Same approach as get_non_deferrable_handles: excluded handles
+	 * plus all of their recursive dependencies.
+	 *
+	 * @param array $exclude User exclusion list.
+	 *
+	 * @return array Associative array of handle => true.
+	 */
+	private static function get_non_delayable_handles( $exclude ) {
+		static $cache = null;
+		if ( null !== $cache ) {
+			return $cache;
+		}
+
+		$wp_scripts    = wp_scripts();
+		$non_delayable = array();
+
+		// First pass: find all explicitly excluded handles.
+		foreach ( $wp_scripts->registered as $handle => $dep_obj ) {
+			if ( self::matches_delay_exclusion_pattern( $handle, $exclude ) ) {
+				$non_delayable[ $handle ] = true;
+			}
+		}
+
+		// Second pass: mark all dependencies of excluded handles.
+		$to_process = array_keys( $non_delayable );
+		while ( ! empty( $to_process ) ) {
+			$current = array_pop( $to_process );
+			if ( ! isset( $wp_scripts->registered[ $current ] ) ) {
+				continue;
+			}
+			foreach ( $wp_scripts->registered[ $current ]->deps as $dep ) {
+				if ( ! isset( $non_delayable[ $dep ] ) ) {
+					$non_delayable[ $dep ] = true;
+					$to_process[]          = $dep;
+				}
+			}
+		}
+
+		$cache = $non_delayable;
+		return $cache;
+	}
+
+	/**
 	 * Output the delay loader script inline in head.
 	 *
 	 * @return void
@@ -458,7 +580,11 @@ class I365_PO_Frontend {
 			return;
 		}
 
-		$script = file_get_contents( $loader_file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$handle = fopen( $loader_file, 'r' );
+		$script = $handle ? fread( $handle, filesize( $loader_file ) ) : '';
+		if ( $handle ) {
+			fclose( $handle );
+		}
 
 		if ( empty( $script ) ) {
 			return;
@@ -467,7 +593,6 @@ class I365_PO_Frontend {
 		// Output timeout variable and inline script.
 		// The script content is from a trusted plugin file, not user input.
 		echo '<script id="i365-delay-loader">window.i365DelayTimeout=' . absint( $timeout ) . ';';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted plugin JS file content.
 		echo $script;
 		echo "</script>\n";
 	}
@@ -527,6 +652,11 @@ class I365_PO_Frontend {
 	 * @return string
 	 */
 	public static function remove_query_strings( $src, $handle ) {
+		// Never strip version strings from admin assets.
+		if ( is_admin() ) {
+			return $src;
+		}
+
 		// Only process if there's a version query string.
 		if ( strpos( $src, '?ver=' ) !== false || strpos( $src, '&ver=' ) !== false ) {
 			$src = remove_query_arg( 'ver', $src );

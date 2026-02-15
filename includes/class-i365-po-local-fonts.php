@@ -172,7 +172,7 @@ class I365_PO_Local_Fonts {
 			$google_fonts_url,
 			array(
 				'timeout'    => 30,
-				'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+				'user-agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . home_url(),
 			)
 		);
 
@@ -220,8 +220,11 @@ class I365_PO_Local_Fonts {
 
 		// Save local CSS.
 		$css_file = $fonts_dir . '/fonts.css';
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		$saved = file_put_contents( $css_file, $local_css );
+		$fp    = fopen( $css_file, 'w' );
+		$saved = $fp ? fwrite( $fp, $local_css ) : false;
+		if ( $fp ) {
+			fclose( $fp );
+		}
 
 		if ( false === $saved ) {
 			return new \WP_Error(
@@ -254,11 +257,9 @@ class I365_PO_Local_Fonts {
 		$fonts_dir = self::get_fonts_dir();
 
 		if ( ! file_exists( $fonts_dir ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
 			return mkdir( $fonts_dir, 0755, true );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
 		return is_writable( $fonts_dir );
 	}
 
@@ -325,8 +326,11 @@ class I365_PO_Local_Fonts {
 		}
 
 		// Save the font file.
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		$saved = file_put_contents( $filepath, $body );
+		$fp    = fopen( $filepath, 'wb' );
+		$saved = $fp ? fwrite( $fp, $body ) : false;
+		if ( $fp ) {
+			fclose( $fp );
+		}
 
 		if ( false === $saved ) {
 			return new \WP_Error(
@@ -605,8 +609,7 @@ class I365_PO_Local_Fonts {
 			$files = glob( $fonts_dir . '/*' );
 			foreach ( $files as $file ) {
 				if ( is_file( $file ) ) {
-					// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
-					unlink( $file );
+					wp_delete_file( $file );
 				}
 			}
 		}
@@ -627,25 +630,38 @@ class I365_PO_Local_Fonts {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized', '365i-performance-optimizer' ) ) );
 		}
 
-		$url = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '';
+		$url        = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '';
+		$detect_log = array();
 
 		if ( empty( $url ) ) {
-			// Try to detect from current settings or scan homepage.
-			$detected_url = self::detect_fonts_url_from_homepage();
-			if ( empty( $detected_url ) ) {
-				wp_send_json_error( array( 'message' => __( 'No Google Fonts URL provided or detected.', '365i-performance-optimizer' ) ) );
+			// Multi-strategy auto-detection.
+			$detection  = I365_PO_Font_Detection::detect_fonts_url();
+			$url        = $detection['url'];
+			$detect_log = $detection['log'];
+
+			if ( empty( $url ) ) {
+				wp_send_json_error( array(
+					'message'    => __( 'Could not detect Google Fonts automatically. See the detection log for details.', '365i-performance-optimizer' ),
+					'detect_log' => $detect_log,
+					'suggestion' => __( 'Paste a Google Fonts URL manually (e.g. from fonts.google.com), or check if another plugin is managing your fonts.', '365i-performance-optimizer' ),
+				) );
 			}
-			$url = $detected_url;
 		}
 
 		if ( ! self::is_google_fonts_url( $url ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid Google Fonts URL.', '365i-performance-optimizer' ) ) );
+			wp_send_json_error( array(
+				'message'    => __( 'Invalid Google Fonts URL.', '365i-performance-optimizer' ),
+				'detect_log' => $detect_log,
+			) );
 		}
 
 		$result = self::download_fonts( $url );
 
 		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+			wp_send_json_error( array(
+				'message'    => $result->get_error_message(),
+				'detect_log' => $detect_log,
+			) );
 		}
 
 		wp_send_json_success( array(
@@ -654,35 +670,10 @@ class I365_PO_Local_Fonts {
 				__( 'Successfully downloaded %d font files.', '365i-performance-optimizer' ),
 				$result['font_count']
 			),
-			'fonts_info' => self::get_fonts_info(),
+			'fonts_info'  => self::get_fonts_info(),
+			'detect_log'  => $detect_log,
+			'strategy'    => isset( $detection['strategy'] ) ? $detection['strategy'] : 'manual_url',
 		) );
-	}
-
-	/**
-	 * Detect Google Fonts URL from homepage.
-	 *
-	 * @return string|false URL or false if not found.
-	 */
-	private static function detect_fonts_url_from_homepage() {
-		$response = wp_remote_get(
-			home_url(),
-			array(
-				'timeout' => 15,
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return false;
-		}
-
-		$body = wp_remote_retrieve_body( $response );
-
-		// Look for Google Fonts CSS links.
-		if ( preg_match( '/href=["\']([^"\']*fonts\.googleapis\.com\/css2?\?[^"\']+)["\']/i', $body, $matches ) ) {
-			return html_entity_decode( $matches[1] );
-		}
-
-		return false;
 	}
 
 	/**
