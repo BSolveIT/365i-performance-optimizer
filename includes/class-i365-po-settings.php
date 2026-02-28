@@ -184,6 +184,26 @@ class I365_PO_Settings {
 						</label>
 						<label class="i365-po-field">
 							<span>
+								<?php esc_html_e( 'Mode', '365i-performance-optimizer' ); ?>
+								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Prerender fully loads the page in the background for instant navigation. Prefetch only downloads the HTML, which is lighter on server resources.', '365i-performance-optimizer' ) ); ?>">i</span>
+							</span>
+							<select name="<?php echo esc_attr( I365_PO_OPTION_KEY ); ?>[speculation_mode]">
+								<?php
+								$mode_options = array(
+									'auto'      => __( 'Auto (default)', '365i-performance-optimizer' ),
+									'prerender' => __( 'Prerender', '365i-performance-optimizer' ),
+									'prefetch'  => __( 'Prefetch', '365i-performance-optimizer' ),
+								);
+								foreach ( $mode_options as $value => $label ) :
+									?>
+									<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $settings['speculation_mode'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+									<?php
+								endforeach;
+								?>
+							</select>
+						</label>
+						<label class="i365-po-field">
+							<span>
 								<?php esc_html_e( 'Eagerness', '365i-performance-optimizer' ); ?>
 								<span class="i365-po-help" tabindex="0" data-tip="<?php echo esc_attr( __( 'Controls how aggressively to prefetch links. Eager: most aggressive. Moderate: balanced. Conservative: only obvious navigations.', '365i-performance-optimizer' ) ); ?>">i</span>
 							</span>

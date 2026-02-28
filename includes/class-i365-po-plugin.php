@@ -112,6 +112,7 @@ class I365_PO_Plugin {
 	public static function defaults() {
 		return array(
 			'enable_speculation'     => true,
+			'speculation_mode'       => 'auto',
 			'speculation_eagerness'  => 'eager',
 			'speculation_exclusions' => array(),
 			'enable_preload'         => true,
@@ -227,6 +228,8 @@ class I365_PO_Plugin {
 		}
 
 		$output['enable_speculation']    = ! empty( $input['enable_speculation'] );
+		$speculation_mode = sanitize_text_field( $input['speculation_mode'] ?? '' );
+		$output['speculation_mode'] = in_array( $speculation_mode, array( 'auto', 'prerender', 'prefetch' ), true ) ? $speculation_mode : $defaults['speculation_mode'];
 		$speculation_eagerness = sanitize_text_field( $input['speculation_eagerness'] ?? '' );
 		$output['speculation_eagerness'] = in_array( $speculation_eagerness, array( 'eager', 'moderate', 'conservative' ), true ) ? $speculation_eagerness : $defaults['speculation_eagerness'];
 		$output['speculation_exclusions'] = array();
@@ -646,6 +649,7 @@ class I365_PO_Plugin {
 				'builtin'     => true,
 				'settings'    => array(
 					'enable_speculation'     => false,
+					'speculation_mode'       => 'auto',
 					'speculation_eagerness'  => 'conservative',
 					'speculation_exclusions' => array(),
 					'enable_preload'         => false,
@@ -691,6 +695,7 @@ class I365_PO_Plugin {
 				'builtin'     => true,
 				'settings'    => array(
 					'enable_speculation'     => true,
+					'speculation_mode'       => 'prerender',
 					'speculation_eagerness'  => 'eager',
 					'speculation_exclusions' => array( '/cart', '/checkout', '/my-account' ),
 					'enable_preload'         => true,
@@ -927,6 +932,8 @@ class I365_PO_Plugin {
 					$sanitized[ $key ] = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : $default_value;
 				} elseif ( in_array( $key, array( 'preload_stylesheet', 'preload_font', 'preload_hero' ), true ) ) {
 					$sanitized[ $key ] = esc_url_raw( $value );
+				} elseif ( 'speculation_mode' === $key ) {
+					$sanitized[ $key ] = in_array( $value, array( 'auto', 'prerender', 'prefetch' ), true ) ? $value : $default_value;
 				} elseif ( 'speculation_eagerness' === $key ) {
 					$sanitized[ $key ] = in_array( $value, array( 'eager', 'moderate', 'conservative' ), true ) ? $value : $default_value;
 				} else {

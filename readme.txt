@@ -4,7 +4,7 @@ Tags: performance, speed, cache, elementor, woocommerce
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,6 +104,9 @@ Yes. Each site in a multisite network has its own settings. Network activation i
 6. Dashboard widget showing active optimizations at a glance.
 
 == Changelog ==
+
+= 2.2.0 =
+* NEW: Speculative Loading mode setting - choose between Prerender (full background load) and Prefetch (HTML only). Previously locked to Prerender.
 
 = 2.1.1 =
 * FIX: Script deferral and JS delay now use dependency-aware exclusion. When a script is excluded (e.g. wp-util), all of its dependencies (underscore, react, backbone, etc.) are automatically excluded too. Prevents "X is not defined" console errors.

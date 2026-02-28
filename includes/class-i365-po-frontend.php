@@ -253,6 +253,9 @@ class I365_PO_Frontend {
 			return $config;
 		}
 
+		if ( 'auto' !== $settings['speculation_mode'] ) {
+			$config['mode'] = $settings['speculation_mode'];
+		}
 		$config['eagerness'] = $settings['speculation_eagerness'];
 
 		if ( ! empty( $settings['speculation_exclusions'] ) ) {
