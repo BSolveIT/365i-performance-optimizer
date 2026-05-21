@@ -2,9 +2,9 @@
 Contributors: bsolveit
 Tags: performance, speed, cache, elementor, woocommerce
 Requires at least: 6.2
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,6 +104,9 @@ Yes. Each site in a multisite network has its own settings. Network activation i
 6. Dashboard widget showing active optimizations at a glance.
 
 == Changelog ==
+
+= 2.2.1 =
+* COMPAT: Tested up to WordPress 7.0.
 
 = 2.2.0 =
 * NEW: Speculative Loading mode setting - choose between Prerender (full background load) and Prefetch (HTML only). Previously locked to Prerender.
